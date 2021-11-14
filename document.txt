@@ -1,0 +1,131 @@
+                //.on => Olheiro da database, monitora as alteracoes
+                // await firebase.database().ref('nome').on('value', (snapshot) => {
+                //     setNome(snapshot.val());        
+                // })
+
+                //.once => Busca os dados apenas uma vez
+                // await firebase.database().ref('nome').once('value', (snapshot) => {
+                //     setNome(snapshot.val());
+                // })
+
+                //Buscar mais de um dados dado
+                // await firebase.database().ref('usuarios/1').on('value', (snapshot) => {
+                //     setNome(snapshot.val().nome);  
+                //     setIdade(snapshot.val().idade);      
+                // })
+                
+                // Criar um no
+                // await firebase.database().ref('tipo').set('Vendedor');
+
+                // Remover um no
+                // await firebase.database().ref('tipo').remove();
+
+                // Inserindo novo usuario
+                // await firebase.database().ref('usuarios').child(3).set({
+                //     nome:'Jose',
+                //     cargo:'Progamador Junior'
+                // })
+
+                //UPDATE EM UM CHILD
+                // await firebase.database().ref('usuarios').child(3)
+                // .update({
+                //     nome:'jose augusto'
+                // })
+
+
+            useEffect(() => {
+
+            async function dados(){
+
+                await firebase.database().ref('usuarios').on('value', (snapshot) => {
+                    setUsuarios([]);
+
+                    snapshot.forEach((childItem) => {
+
+                        let data = {
+
+                            key : childItem.key,
+                            nome: childItem.val().nome,
+                            cargo: childItem.val().cargo
+                        };
+
+                        setUsuarios( oldArray => [...oldArray, data].reverse());
+                        setLoader(false);
+
+                    })
+
+                })
+            }
+            dados()
+
+        }, [])
+
+
+    // CADASTRAR USUARIO COM EMAIL E SENHA
+        async function cadastrar(){
+
+            if(nome !== '' && cargo !== ''){
+                 let usuarios = await firebase.database().ref('usuarios');
+                 let chave = usuarios.push().key
+                 
+                   usuarios.child(chave).set({
+                    nome: nome,
+                    cargo: cargo
+                })
+                alert('Funcionario cadastrado!');
+                setEmail('');
+                setPassword('');
+            }else{
+
+                alert('PREENCHA TODOS OS CAMPOS!!!!')
+            }
+        }
+
+                async function cadastrar(){
+
+            await firebase.auth().createUserWithEmailAndPassword(email, password)
+            .then((value) => {
+                alert('Usuario criado: ' +  value.user.email);
+            }).catch((error) => {
+                if(error.code === 'auth/weak-password'){
+
+                     alert('Sua senha deve ter pelo menos 6 caracteres');
+                     return;
+                }else if(error.code === 'auth/invalid-email'){
+
+                    alert('Email invalido!');
+                    return;
+
+                }else {
+                    alert('Ops! Algo deu errado!');
+                    return;
+                }
+            })
+            
+            setEmail('');
+            setPassword(''); 
+        }
+
+
+    //SISTEMA DE LOGIN E LOGOUT COM FIREBASE
+     async function logar() {
+    await firebase
+      .auth()
+      .signInWithEmailAndPassword(email, password)
+      .then(value => {
+        alert('Sucesso ao logar no sistema ' + value.user.email);
+        setUser(value.user.email);
+      })
+      .catch(error => {
+        alert('Ops! Algo deu errado!');
+        return;
+      });
+
+    setEmail('');
+    setPassword('');
+  }
+
+  async function logout() {
+    await firebase.auth().signOut();
+    setUser('');
+  }
